@@ -951,13 +951,16 @@ window.addEventListener('scroll',tick,{passive:true});window.addEventListener('r
  function begin(){if(launched||reduced.matches)return;launched=true;clearTimeout(loadTimeout);if(!hand.naturalWidth||!marks.naturalWidth)return;hero.append(overlay);hero.classList.add('ce-real-wiping');
  const w=hero.clientWidth,h=hero.clientHeight;layoutWidth=w;layoutHeight=h;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);
  ctx.fillStyle='rgba(219,229,234,.25)';ctx.fillRect(0,0,w,h);ctx.globalAlpha=.66;const scale=Math.max(w/marks.naturalWidth,h/marks.naturalHeight),mw=marks.naturalWidth*scale,mh=marks.naturalHeight*scale;ctx.drawImage(marks,(w-mw)/2,(h-mh)/2,mw,mh);ctx.globalAlpha=1;
- const size=Math.max(420,Math.min(760,w*.54));arm.style.width=size+'px';const brush=Math.max(size*.44,h*.19);let start=null,last=null;
- // One continuous, rounded gesture. Slow gently at turns without pausing or restarting each stroke.
- const points=[{x:1.38,y:.07},{x:.09,y:.20},{x:.94,y:.36},{x:.12,y:.53},{x:.91,y:.70},{x:.16,y:.85},{x:1.45,y:1.08}];
+ const size=Math.max(420,Math.min(760,w*.54));arm.style.width=size+'px';const brush=Math.max(size*.44,h*.31);let start=null,last=null;
+ // Four broad connected sweeps with wide U-turns. The analytic path is smooth through every reversal.
  const total=4200,table=[];let travel=0,previous=null;
- const extrapolate=(a,b)=>({x:2*a.x-b.x,y:2*a.y-b.y});
- function curve(i,t){const a=points[i],b=points[i+1],before=points[i-1]||extrapolate(a,b),after=points[i+2]||extrapolate(b,a),t2=t*t,t3=t2*t;const h0=2*t3-3*t2+1,h1=t3-2*t2+t,h2=-2*t3+3*t2,h3=t3-t2;return{x:(h0*a.x+h1*(b.x-before.x)*.5+h2*b.x+h3*(after.x-a.x)*.5)*w,y:(h0*a.y+h1*(b.y-before.y)*.5+h2*b.y+h3*(after.y-a.y)*.5)*h};}
- for(let i=0;i<points.length-1;i++)for(let j=i===0?0:1;j<=260;j++){const u=j/260,p=curve(i,u);if(previous){travel+=Math.hypot(p.x-previous.x,p.y-previous.y);}table.push({x:p.x,y:p.y,d:travel});previous=p;}
+ for(let i=0;i<=2400;i++){const p=i/2400,theta=4*Math.PI*p;
+ const edge=.52*(Math.exp(-Math.pow(p/.08,4))+Math.exp(-Math.pow((1-p)/.08,4)));
+ const amplitude=.38+edge;
+ const descent=p+.92*Math.sin(2*theta)/(8*Math.PI);
+ const point={x:(.5+amplitude*Math.cos(theta))*w,y:(-.07+1.14*descent)*h};
+ if(previous)travel+=Math.hypot(point.x-previous.x,point.y-previous.y);
+ table.push({x:point.x,y:point.y,d:travel});previous=point;}
  // Constant arc-length speed through every turn; no easing, holds or restarts.
  let index=0;
  function frame(now){if(finished)return;if(start===null)start=now;const progress=Math.max(0,Math.min(1,(now-start)/total)),distance=progress*travel;while(index<table.length-2&&table[index+1].d<distance)index++;const a=table[index],b=table[index+1],mix=Math.max(0,Math.min(1,(distance-a.d)/(b.d-a.d||1))),x=a.x+(b.x-a.x)*mix,y=a.y+(b.y-a.y)*mix;
