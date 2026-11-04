@@ -957,11 +957,10 @@ window.addEventListener('scroll',tick,{passive:true});window.addEventListener('r
  const total=4200,table=[];let travel=0,previous=null;
  const extrapolate=(a,b)=>({x:2*a.x-b.x,y:2*a.y-b.y});
  function curve(i,t){const a=points[i],b=points[i+1],before=points[i-1]||extrapolate(a,b),after=points[i+2]||extrapolate(b,a),t2=t*t,t3=t2*t;const h0=2*t3-3*t2+1,h1=t3-2*t2+t,h2=-2*t3+3*t2,h3=t3-t2;return{x:(h0*a.x+h1*(b.x-before.x)*.5+h2*b.x+h3*(after.x-a.x)*.5)*w,y:(h0*a.y+h1*(b.y-before.y)*.5+h2*b.y+h3*(after.y-a.y)*.5)*h};}
- for(let i=0;i<points.length-1;i++)for(let j=i===0?0:1;j<=260;j++){const u=j/260,p=curve(i,u);if(previous){const distance=Math.hypot(p.x-previous.x,p.y-previous.y),speed=.68+.32*Math.sin(Math.PI*u)**2;travel+=distance/speed;}table.push({x:p.x,y:p.y,d:travel});previous=p;}
- // Ease only the off-screen entrance/exit; the visible motion never comes to a full stop.
- const ease=p=>{const edge=.12,area=1-edge;if(p<edge)return p*p/(2*edge*area);if(p>1-edge)return 1-(1-p)*(1-p)/(2*edge*area);return(p-edge/2)/area;};
+ for(let i=0;i<points.length-1;i++)for(let j=i===0?0:1;j<=260;j++){const u=j/260,p=curve(i,u);if(previous){travel+=Math.hypot(p.x-previous.x,p.y-previous.y);}table.push({x:p.x,y:p.y,d:travel});previous=p;}
+ // Constant arc-length speed through every turn; no easing, holds or restarts.
  let index=0;
- function frame(now){if(finished)return;if(start===null)start=now;const progress=Math.max(0,Math.min(1,(now-start)/total)),distance=ease(progress)*travel;while(index<table.length-2&&table[index+1].d<distance)index++;const a=table[index],b=table[index+1],mix=Math.max(0,Math.min(1,(distance-a.d)/(b.d-a.d||1))),x=a.x+(b.x-a.x)*mix,y=a.y+(b.y-a.y)*mix;
+ function frame(now){if(finished)return;if(start===null)start=now;const progress=Math.max(0,Math.min(1,(now-start)/total)),distance=progress*travel;while(index<table.length-2&&table[index+1].d<distance)index++;const a=table[index],b=table[index+1],mix=Math.max(0,Math.min(1,(distance-a.d)/(b.d-a.d||1))),x=a.x+(b.x-a.x)*mix,y=a.y+(b.y-a.y)*mix;
  const tilt=-2+5.5*Math.sin(progress*Math.PI*3-.6)+1.1*Math.sin(progress*Math.PI*2),pressure=1-.008*Math.sin(progress*Math.PI*4)**2;
  ctx.globalCompositeOperation='destination-out';ctx.strokeStyle='rgba(0,0,0,1)';ctx.lineWidth=brush*pressure;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(last?last.x:x,last?last.y:y);ctx.lineTo(x,y);ctx.stroke();
  arm.style.transform='translate3d('+x.toFixed(2)+'px,'+y.toFixed(2)+'px,0) translate(-26%,-40%) rotate('+tilt.toFixed(3)+'deg) scale('+pressure.toFixed(4)+')';last={x,y};
