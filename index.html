@@ -966,11 +966,11 @@ window.addEventListener('scroll',tick,{passive:true});window.addEventListener('r
  for(let i=0;i<125;i++){const x=random()*w,y=random()*h,r=.8+random()*3.4;ctx.beginPath();ctx.ellipse(x,y,r*.72,r,0,0,Math.PI*2);ctx.fillStyle='rgba(10,25,30,.10)';ctx.fill();ctx.beginPath();ctx.ellipse(x-r*.2,y-r*.3,r*.24,r*.16,-.5,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.47)';ctx.fill();}
  // Fine diagonal deposits make the dirty/clean contrast legible without obscuring copy.
  ctx.lineWidth=.7;for(let i=0;i<45;i++){const x=random()*w,y=random()*h;ctx.strokeStyle='rgba(238,235,220,'+(.025+random()*.045)+')';ctx.beginPath();ctx.moveTo(x,y);ctx.bezierCurveTo(x+20,y+16,x+50,y+26,x+90,y+28);ctx.stroke();}
- const size=Math.max(285,Math.min(460,h*.66)),ch=size*cloth.naturalHeight/cloth.naturalWidth;fabric.style.width=size+'px';
+ const size=.75*Math.max(285,Math.min(460,h*.66)),ch=size*cloth.naturalHeight/cloth.naturalWidth;fabric.style.width=size+'px';
  // The cloth occupies roughly two-thirds of its transparent asset width.
  const rows=Math.max(4,Math.ceil(h/(ch*.72))),cycles=rows/2,table=[];let distance=0,prev=null;
  for(let i=0;i<=3200;i++){const p=i/3200,t=cycles*2*Math.PI*p,edge=.52*(Math.exp(-Math.pow(p/.065,4))+Math.exp(-Math.pow((1-p)/.065,4)));
- const descent=p+.9*Math.sin(2*t)/(4*cycles*Math.PI),q={x:(.5+(.4+edge)*Math.cos(t))*w,y:(-.07+1.14*descent)*h};if(prev)distance+=Math.hypot(q.x-prev.x,q.y-prev.y);q.d=distance;table.push(q);prev=q;}
+ const descent=p+.9*Math.sin(2*t)/(4*cycles*Math.PI),q={x:(.5+(Math.max(.4,.5-size*.22/w)+edge)*Math.cos(t))*w,y:(-.07+1.14*descent)*h};if(prev)distance+=Math.hypot(q.x-prev.x,q.y-prev.y);q.d=distance;table.push(q);prev=q;}
  const duration=Math.min(5800,4300+(rows-4)*280);let start=null,last=null,lastTime=null,index=0,angle=0,angularVelocity=0;
  hero.append(layer);
  function frame(now){if(ended)return;if(start===null)start=now;const elapsed=now-start,p=Math.min(1,elapsed/duration),target=p*distance;
