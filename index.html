@@ -767,11 +767,15 @@ html body .ce-brand-bar-contact:active{background:#96d7f4!important;transform:sc
 #activitati summary:focus-visible{outline:2px solid #a3dcf5;outline-offset:-4px;border-radius:15px}
 @media(max-width:620px){#activitati.ce-catalog{padding:40px 0 42px}#activitati .wrap{padding-inline:20px}#activitati .ce-catalog-intro{margin-bottom:25px}#activitati h2{font-size:31px;margin:10px 0 13px}#activitati .ce-catalog-intro p{font-size:14px;line-height:1.6}#activitati summary{min-height:72px;padding:17px 15px;gap:11px}#activitati .ce-catalog-heading{font-size:15px}#activitati .ce-catalog-number{font-size:11px;flex-basis:20px}#activitati .ce-catalog-content{margin:0 16px 19px;padding-top:16px}#activitati ul{grid-template-columns:1fr;gap:11px}#activitati li{font-size:13px;line-height:1.65}#activitati .ce-catalog-note{margin-top:22px}#activitati .btn{width:100%}}
 @media(prefers-reduced-motion:reduce){#activitati *{transition:none!important}}
-</style><style id="ce-original-video-style">
-#acasa .ce-original-video{position:absolute;inset:0;z-index:8;pointer-events:none;background:rgba(5,16,23,.68);opacity:1;transition:opacity .65s ease}
-#acasa .ce-original-video video{display:block;width:100%;height:100%;object-fit:contain}
-#acasa .ce-original-video.is-finished{opacity:0}
-@media(prefers-reduced-motion:reduce){#acasa .ce-original-video{display:none}}
+</style>
+<style id="ce-natural-wipe-style">
+#acasa .ce-squeegee-overlay{position:absolute;inset:0;z-index:8;pointer-events:none;overflow:hidden;opacity:1;transition:opacity .45s ease;contain:paint}
+#acasa .ce-soap-canvas,#acasa .ce-water-edge{position:absolute;inset:0;width:100%;height:100%}
+#acasa .ce-squeegee-hand{position:absolute;left:0;top:0;transform-origin:24.7% 49.3%;will-change:transform;filter:drop-shadow(2px 7px 6px rgba(0,0,0,.17))}
+#acasa .ce-squeegee-hand img{display:block;width:100%;height:auto}
+#acasa .ce-squeegee-light{position:absolute;inset:0;box-shadow:inset 0 0 55px rgba(211,232,237,.08);pointer-events:none}
+#acasa .ce-squeegee-done{opacity:0}
+@media(prefers-reduced-motion:reduce){#acasa .ce-squeegee-overlay{display:none}}
 </style>
 </head><body>
 <div class="ce-top-marquee ce-brand-bar" role="navigation" aria-label="Clean Elite — contact">
@@ -933,23 +937,52 @@ window.addEventListener('scroll',tick,{passive:true});window.addEventListener('r
 </script><!-- C14: Mobile form toggle title follows its expanded state. -->
 <script id="ce-mobile-C14">
 (()=>{const button=document.getElementById('quoteToggle'),title=button?.querySelector('.ce-quote-label strong');if(!button||!title)return;const original=title.textContent,media=matchMedia('(max-width:620px)');const update=()=>{title.textContent=media.matches?(button.getAttribute('aria-expanded')==='true'?'Închide formularul':'Deschide formularul'):original};new MutationObserver(update).observe(button,{attributes:true,attributeFilter:['aria-expanded']});media.addEventListener('change',update);update()})();
-</script><script id="ce-desktop-D3-behavior">(()=>{const b=document.getElementById('quoteToggle'),title=b?.querySelector('strong'),small=b?.querySelector('small');if(!b||!title||!small)return;const media=matchMedia('(min-width:621px)');function update(){if(!media.matches)return;const open=b.getAttribute('aria-expanded')==='true';title.textContent=open?'Închide formularul':'Deschide formularul';small.textContent=open?'Apasă aici pentru a închide formularul':'Apasă aici pentru a deschide formularul'}new MutationObserver(update).observe(b,{attributes:true,attributeFilter:['aria-expanded']});media.addEventListener('change',update);update()})();</script><script id="ce-original-video-script">
-(function(){
-function init(){
-var hero=document.getElementById('acasa');
-if(!hero || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches))return;
-var layer=document.createElement('div');layer.className='ce-original-video';layer.setAttribute('aria-hidden','true');
-var video=document.createElement('video');video.muted=true;video.defaultMuted=true;video.autoplay=true;video.playsInline=true;video.controls=false;video.loop=false;video.preload='auto';
-video.setAttribute('muted','');video.setAttribute('autoplay','');video.setAttribute('playsinline','');video.setAttribute('webkit-playsinline','');
-var done=false,timer;
-function finish(){if(done)return;done=true;clearTimeout(timer);video.pause();layer.classList.add('is-finished');setTimeout(function(){layer.remove();video.removeAttribute('src');video.load();},700);}
-video.addEventListener('ended',finish,{once:true});video.addEventListener('error',finish,{once:true});
-video.addEventListener('playing',function(){clearTimeout(timer);timer=setTimeout(finish,25000);},{once:true});
-video.src='assets/hero-original-cleaning-video.mp4';layer.appendChild(video);hero.appendChild(layer);
-timer=setTimeout(finish,12000);
-var play=video.play();if(play && play.catch)play.catch(finish);
-}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+</script><script id="ce-desktop-D3-behavior">(()=>{const b=document.getElementById('quoteToggle'),title=b?.querySelector('strong'),small=b?.querySelector('small');if(!b||!title||!small)return;const media=matchMedia('(min-width:621px)');function update(){if(!media.matches)return;const open=b.getAttribute('aria-expanded')==='true';title.textContent=open?'Închide formularul':'Deschide formularul';small.textContent=open?'Apasă aici pentru a închide formularul':'Apasă aici pentru a deschide formularul'}new MutationObserver(update).observe(b,{attributes:true,attributeFilter:['aria-expanded']});media.addEventListener('change',update);update()})();</script>
+<script id="ce-natural-wipe-script">/* Clean Elite: photographic squeegee and soap overlay, one automatic run. */
+(()=>{
+ const hero=document.getElementById('acasa');if(!hero)return;
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)');if(reduced.matches)return;
+ const hand=new Image(),foam=new Image();hand.src='assets/hero-hand-squeegee-v1.webp';foam.src='assets/hero-window-foam-v1.webp';
+ let launched=false,finished=false,raf=0,fallback=0,loadTimeout=0,layoutWidth=0,layoutHeight=0;
+ const overlay=document.createElement('div');overlay.className='ce-squeegee-overlay';overlay.setAttribute('aria-hidden','true');
+ const canvas=document.createElement('canvas');canvas.className='ce-soap-canvas';const ctx=canvas.getContext('2d');if(!ctx)return;
+ const water=document.createElement('canvas');water.className='ce-water-edge';const edge=water.getContext('2d');
+ const arm=document.createElement('div');arm.className='ce-squeegee-hand';hand.alt='';arm.append(hand);
+ const light=document.createElement('div');light.className='ce-squeegee-light';overlay.append(canvas,water,arm,light);
+ function end(){if(finished)return;finished=true;cancelAnimationFrame(raf);clearTimeout(fallback);clearTimeout(loadTimeout);overlay.classList.add('ce-squeegee-done');setTimeout(()=>overlay.remove(),1000);}
+ function begin(){if(launched||reduced.matches)return;launched=true;clearTimeout(loadTimeout);if(!hand.naturalWidth||!foam.naturalWidth)return;hero.append(overlay);
+ const w=hero.clientWidth,h=hero.clientHeight;layoutWidth=w;layoutHeight=h;const dpr=Math.min(devicePixelRatio||1,2);
+ for(const c of [canvas,water]){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);c.style.width=w+'px';c.style.height=h+'px';}ctx.setTransform(dpr,0,0,dpr,0,0);if(edge)edge.setTransform(dpr,0,0,dpr,0,0);
+ const fit=Math.max(w/foam.naturalWidth,h/foam.naturalHeight),fw=foam.naturalWidth*fit,fh=foam.naturalHeight*fit;ctx.globalAlpha=.38;ctx.drawImage(foam,(w-fw)/2,(h-fh)/2,fw,fh);ctx.globalAlpha=1;
+ const size=h*.52/((hand.naturalHeight/hand.naturalWidth)*.94);arm.style.width=size+'px';const halfBlade=size*(hand.naturalHeight/hand.naturalWidth)*.47;
+ const total=5400,table=[];let travel=0,previous=null,start=null,last=null;
+
+ const margin=Math.max(w*.12,halfBlade*.4),left=-margin,right=w+margin;
+ function add(x,y){const point={x,y};if(previous)travel+=Math.hypot(x-previous.x,y-previous.y);table.push({...point,d:travel});previous=point;}
+ // Long strokes and rounded turns outside the glass, sampled by travelled distance.
+ for(let row=0;row<4;row++){
+  const y=h*(.035+row*.31),forward=row%2===0,x0=forward?left:right,x1=forward?right:left;
+  for(let i=0;i<=420;i++)add(x0+(x1-x0)*i/420,y);
+  if(row<3){const sign=forward?1:-1;
+   for(let i=1;i<=160;i++){const t=i/160;add(x1+sign*margin*.65*Math.sin(Math.PI*t),y+h*.31*(.5-.5*Math.cos(Math.PI*t)));}
+  }
+ }
+
+ let index=0;
+ function frame(now){if(finished)return;if(start===null)start=now;const progress=Math.max(0,Math.min(1,(now-start)/total)),distance=progress*travel;while(index<table.length-2&&table[index+1].d<distance)index++;const a=table[index],b=table[index+1],mix=Math.max(0,Math.min(1,(distance-a.d)/(b.d-a.d||1))),x=a.x+(b.x-a.x)*mix,y=a.y+(b.y-a.y)*mix;
+ const tilt=5*Math.sin(progress*4*Math.PI),r=tilt*Math.PI/180;
+ // The transparent track is swept by the actual straight blade endpoints, not a round brush.
+ const A={x:x+Math.sin(r)*halfBlade,y:y-Math.cos(r)*halfBlade},B={x:x-Math.sin(r)*halfBlade,y:y+Math.cos(r)*halfBlade};
+ ctx.globalCompositeOperation='destination-out';ctx.fillStyle='rgba(0,0,0,1)';ctx.strokeStyle='rgba(0,0,0,1)';ctx.lineWidth=2;ctx.lineCap='round';
+ if(last){ctx.beginPath();ctx.moveTo(last.A.x,last.A.y);ctx.lineTo(last.B.x,last.B.y);ctx.lineTo(B.x,B.y);ctx.lineTo(A.x,A.y);ctx.closePath();ctx.fill();}ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke();
+ if(edge){edge.clearRect(0,0,w,h);edge.strokeStyle='rgba(255,255,255,.7)';edge.lineWidth=2.4;edge.lineCap='round';edge.beginPath();edge.moveTo(A.x-1,A.y);edge.lineTo(B.x-1,B.y);edge.stroke();}
+ arm.style.transform='translate3d('+x.toFixed(2)+'px,'+y.toFixed(2)+'px,0) translate(-24.7%,-49.3%) rotate('+tilt.toFixed(3)+'deg)';last={A,B};
+ if(progress<1)raf=requestAnimationFrame(frame);else end();}
+ raf=requestAnimationFrame(frame);fallback=setTimeout(end,total+1800);}
+ function ready(){if(hand.complete&&foam.complete&&hand.naturalWidth&&foam.naturalWidth)begin();}
+ hand.onload=ready;foam.onload=ready;hand.onerror=foam.onerror=()=>{launched=true;end();};loadTimeout=setTimeout(()=>{launched=true;end();},4500);ready();
+ window.addEventListener('resize',()=>{if(launched&&(Math.abs(hero.clientWidth-layoutWidth)>2||Math.abs(hero.clientHeight-layoutHeight)>60))end();},{passive:true});
+ if(reduced.addEventListener)reduced.addEventListener('change',e=>{if(e.matches){launched=true;end();}});
 })();
 </script>
 </body></html>
