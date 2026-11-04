@@ -955,6 +955,15 @@ window.addEventListener('scroll',tick,{passive:true});window.addEventListener('r
  function finish(){if(ended)return;ended=true;cancelAnimationFrame(raf);clearTimeout(watchdog);clearTimeout(loading);layer.classList.add('ce-optical-finished');setTimeout(()=>layer.remove(),560);}
  function begin(){if(started||ended||media.matches||!cloth.naturalWidth||!room.naturalWidth)return;started=true;clearTimeout(loading);
  const w=hero.clientWidth,h=hero.clientHeight,dpr=Math.min(devicePixelRatio||1,1.75);if(!w||!h){finish();return;}
+ // Align the effect with the first line of hero copy using layout coordinates,
+ // independent of entrance transforms applied to the text.
+ const firstText=hero.querySelector('.ce-content .eyebrow')||hero.querySelector('h1');
+ let copyTop=0,node=firstText;
+ while(node&&node!==hero){copyTop+=node.offsetTop||0;node=node.offsetParent;}
+ const cleanTop=Math.max(0,Math.min(h-120,node===hero?copyTop:0)),cleanHeight=h-cleanTop;
+ layer.style.top=cleanTop+'px';layer.style.height=cleanHeight+'px';
+ for(const el of [pane,wet,fabric])el.style.top=-cleanTop+'px';
+
  for(const c of [pane,wet]){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);c.style.width=w+'px';c.style.height=h+'px';}
  ctx.setTransform(dpr,0,0,dpr,0,0);water.setTransform(dpr,0,0,dpr,0,0);
  // Same photograph and crop as the scene: the clear path reveals the actual hero.
@@ -995,9 +1004,9 @@ window.addEventListener('scroll',tick,{passive:true});window.addEventListener('r
  weave(0,0);
 
  // The cloth occupies roughly two-thirds of its transparent asset width.
- const rows=Math.max(4,Math.ceil(h/(ch*.72))),cycles=rows/2,table=[];let distance=0,prev=null;
+ const rows=Math.max(4,Math.ceil(cleanHeight/(ch*.72))),cycles=rows/2,table=[];let distance=0,prev=null;
  for(let i=0;i<=3200;i++){const p=i/3200,t=cycles*2*Math.PI*p,edge=.52*(Math.exp(-Math.pow(p/.065,4))+Math.exp(-Math.pow((1-p)/.065,4)));
- const descent=p+.9*Math.sin(2*t)/(4*cycles*Math.PI),q={x:(.5+(Math.max(.4,.5-size*.22/w)+edge)*Math.cos(t))*w,y:(-.07+1.14*descent)*h};if(prev)distance+=Math.hypot(q.x-prev.x,q.y-prev.y);q.d=distance;table.push(q);prev=q;}
+ const descent=p+.9*Math.sin(2*t)/(4*cycles*Math.PI),q={x:(.5+(Math.max(.4,.5-size*.22/w)+edge)*Math.cos(t))*w,y:cleanTop+(-.07+1.14*descent)*cleanHeight};if(prev)distance+=Math.hypot(q.x-prev.x,q.y-prev.y);q.d=distance;table.push(q);prev=q;}
  const duration=Math.min(5800,4300+(rows-4)*280);let start=null,last=null,lastTime=null,index=0,angle=0,angularVelocity=0;
  hero.append(layer);
  function frame(now){if(ended)return;if(start===null)start=now;const elapsed=now-start,p=Math.min(1,elapsed/duration),target=p*distance;
