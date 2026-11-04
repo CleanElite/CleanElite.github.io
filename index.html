@@ -952,19 +952,20 @@ window.addEventListener('scroll',tick,{passive:true});window.addEventListener('r
  const w=hero.clientWidth,h=hero.clientHeight;layoutWidth=w;layoutHeight=h;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);
  ctx.fillStyle='rgba(219,229,234,.25)';ctx.fillRect(0,0,w,h);ctx.globalAlpha=.66;const scale=Math.max(w/marks.naturalWidth,h/marks.naturalHeight),mw=marks.naturalWidth*scale,mh=marks.naturalHeight*scale;ctx.drawImage(marks,(w-mw)/2,(h-mh)/2,mw,mh);ctx.globalAlpha=1;
  const size=Math.max(420,Math.min(760,w*.54));arm.style.width=size+'px';const brush=Math.max(size*.44,h*.19);let start=null,last=null;
- // Broad diagonal strokes and wrist arcs, with a relaxed stop before each change of direction.
- const points=[{x:1.38,y:.07,a:-8},{x:.09,y:.20,a:-3},{x:.94,y:.36,a:4},{x:.12,y:.53,a:-5},{x:.91,y:.70,a:3},{x:.16,y:.85,a:-2},{x:1.45,y:1.08,a:7}];
- const controls=[[{x:1.10,y:.04},{x:.24,y:.12}],[{x:.12,y:.30},{x:.72,y:.43}],[{x:.85,y:.28},{x:.25,y:.45}],[{x:.15,y:.65},{x:.70,y:.76}],[{x:.78,y:.65},{x:.29,y:.83}],[{x:.27,y:.97},{x:1.05,y:1.10}]];
- const durations=[980,920,1080,960,1040,1000],rests=[90,130,80,120,100,0];const total=durations.reduce((sum,n,i)=>sum+n+rests[i],0);
- const ease=t=>t*t*t*(t*(t*6-15)+10);
- const bezier=(a,b,c,d,t)=>{const v=1-t;return v*v*v*a+3*v*v*t*b+3*v*t*t*c+t*t*t*d;};
- function frame(now){if(finished)return;if(start===null)start=now;let elapsed=Math.max(0,now-start),segment=0;while(segment<durations.length-1&&elapsed>=durations[segment]+rests[segment]){elapsed-=durations[segment]+rests[segment];segment++;}
- const u=Math.min(1,elapsed/durations[segment]),t=ease(u),from=points[segment],to=points[segment+1],cp=controls[segment];
- const x=bezier(from.x,cp[0].x,cp[1].x,to.x,t)*w,y=bezier(from.y,cp[0].y,cp[1].y,to.y,t)*h;
- const tilt=from.a+(to.a-from.a)*t+Math.sin(u*Math.PI)*1.2,pressure=1-.012*Math.sin(u*Math.PI);
+ // One continuous, rounded gesture. Slow gently at turns without pausing or restarting each stroke.
+ const points=[{x:1.38,y:.07},{x:.09,y:.20},{x:.94,y:.36},{x:.12,y:.53},{x:.91,y:.70},{x:.16,y:.85},{x:1.45,y:1.08}];
+ const total=6200,table=[];let travel=0,previous=null;
+ const extrapolate=(a,b)=>({x:2*a.x-b.x,y:2*a.y-b.y});
+ function curve(i,t){const a=points[i],b=points[i+1],before=points[i-1]||extrapolate(a,b),after=points[i+2]||extrapolate(b,a),t2=t*t,t3=t2*t;const h0=2*t3-3*t2+1,h1=t3-2*t2+t,h2=-2*t3+3*t2,h3=t3-t2;return{x:(h0*a.x+h1*(b.x-before.x)*.5+h2*b.x+h3*(after.x-a.x)*.5)*w,y:(h0*a.y+h1*(b.y-before.y)*.5+h2*b.y+h3*(after.y-a.y)*.5)*h};}
+ for(let i=0;i<points.length-1;i++)for(let j=i===0?0:1;j<=260;j++){const u=j/260,p=curve(i,u);if(previous){const distance=Math.hypot(p.x-previous.x,p.y-previous.y),speed=.68+.32*Math.sin(Math.PI*u)**2;travel+=distance/speed;}table.push({x:p.x,y:p.y,d:travel});previous=p;}
+ // Ease only the off-screen entrance/exit; the visible motion never comes to a full stop.
+ const ease=p=>{const edge=.12,area=1-edge;if(p<edge)return p*p/(2*edge*area);if(p>1-edge)return 1-(1-p)*(1-p)/(2*edge*area);return(p-edge/2)/area;};
+ let index=0;
+ function frame(now){if(finished)return;if(start===null)start=now;const progress=Math.max(0,Math.min(1,(now-start)/total)),distance=ease(progress)*travel;while(index<table.length-2&&table[index+1].d<distance)index++;const a=table[index],b=table[index+1],mix=Math.max(0,Math.min(1,(distance-a.d)/(b.d-a.d||1))),x=a.x+(b.x-a.x)*mix,y=a.y+(b.y-a.y)*mix;
+ const tilt=-2+5.5*Math.sin(progress*Math.PI*3-.6)+1.1*Math.sin(progress*Math.PI*2),pressure=1-.008*Math.sin(progress*Math.PI*4)**2;
  ctx.globalCompositeOperation='destination-out';ctx.strokeStyle='rgba(0,0,0,1)';ctx.lineWidth=brush*pressure;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(last?last.x:x,last?last.y:y);ctx.lineTo(x,y);ctx.stroke();
- arm.style.transform='translate('+x+'px,'+y+'px) translate(-26%,-40%) rotate('+tilt+'deg) scale('+pressure+')';last={x,y};
- if(now-start<total)raf=requestAnimationFrame(frame);else end();}
+ arm.style.transform='translate3d('+x.toFixed(2)+'px,'+y.toFixed(2)+'px,0) translate(-26%,-40%) rotate('+tilt.toFixed(3)+'deg) scale('+pressure.toFixed(4)+')';last={x,y};
+ if(progress<1)raf=requestAnimationFrame(frame);else end();}
  raf=requestAnimationFrame(frame);fallback=setTimeout(end,total+1800);}
  // Delay the effect until both small local assets are ready; never hide content on an image failure.
  function ready(){if(hand.complete&&marks.complete&&hand.naturalWidth&&marks.naturalWidth)begin();}
@@ -972,5 +973,6 @@ window.addEventListener('scroll',tick,{passive:true});window.addEventListener('r
  window.addEventListener('resize',()=>{if(launched&&(Math.abs(hero.clientWidth-layoutWidth)>2||Math.abs(hero.clientHeight-layoutHeight)>60))end();},{passive:true});
  if(reduced.addEventListener)reduced.addEventListener('change',e=>{if(e.matches){launched=true;end();}});
 })();
+
 
 </script></body></html>
