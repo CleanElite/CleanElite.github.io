@@ -769,13 +769,15 @@ html body .ce-brand-bar-contact:active{background:#96d7f4!important;transform:sc
 @media(prefers-reduced-motion:reduce){#activitati *{transition:none!important}}
 </style>
 
-<style id="ce-automatic-cloth-reveal">/* Photographic cleaning layer: no replay/skip controls. */
-#acasa .ce-real-overlay{position:absolute;inset:0;z-index:8;pointer-events:none;overflow:hidden}
-#acasa .ce-real-glass{position:absolute;inset:0;display:block;transition:opacity .65s ease}
-#acasa .ce-real-hand{position:absolute;left:0;top:0;transform-origin:50% 50%;will-change:transform;filter:drop-shadow(0 2px 3px rgba(2,22,32,.16));transition:opacity .3s ease;pointer-events:none}
-#acasa .ce-real-hand img{display:block;width:100%;height:auto;max-width:none;border:0;border-radius:0;box-shadow:none;}
-#acasa .ce-real-done .ce-real-glass,#acasa .ce-real-done .ce-real-hand{opacity:0}
-@media(prefers-reduced-motion:reduce){#acasa .ce-real-overlay{display:none!important}}
+<style id="ce-automatic-cloth-reveal">
+#acasa .ce-optical-glass{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#acasa .ce-optical-pane,#acasa .ce-optical-water{position:absolute;inset:0;display:block;pointer-events:none;transition:opacity .5s cubic-bezier(.2,.7,.2,1)}
+#acasa .ce-optical-pane{z-index:2}
+#acasa .ce-optical-water{z-index:3}
+#acasa .ce-optical-cloth{position:absolute;left:0;top:0;z-index:6;transform-origin:50% 50%;will-change:transform;filter:drop-shadow(0 1px 1.5px rgba(4,23,32,.18));pointer-events:none}
+#acasa .ce-optical-cloth img{display:block;width:100%;height:auto;max-width:none;border:0;border-radius:0;box-shadow:none}
+#acasa .ce-optical-finished .ce-optical-pane,#acasa .ce-optical-finished .ce-optical-water{opacity:0}
+@media(prefers-reduced-motion:reduce){#acasa .ce-optical-glass{display:none!important}}
 </style>
 </head><body>
 <div class="ce-top-marquee ce-brand-bar" role="navigation" aria-label="Clean Elite — contact">
@@ -939,63 +941,56 @@ window.addEventListener('scroll',tick,{passive:true});window.addEventListener('r
 (()=>{const button=document.getElementById('quoteToggle'),title=button?.querySelector('.ce-quote-label strong');if(!button||!title)return;const original=title.textContent,media=matchMedia('(max-width:620px)');const update=()=>{title.textContent=media.matches?(button.getAttribute('aria-expanded')==='true'?'Închide formularul':'Deschide formularul'):original};new MutationObserver(update).observe(button,{attributes:true,attributeFilter:['aria-expanded']});media.addEventListener('change',update);update()})();
 </script><script id="ce-desktop-D3-behavior">(()=>{const b=document.getElementById('quoteToggle'),title=b?.querySelector('strong'),small=b?.querySelector('small');if(!b||!title||!small)return;const media=matchMedia('(min-width:621px)');function update(){if(!media.matches)return;const open=b.getAttribute('aria-expanded')==='true';title.textContent=open?'Închide formularul':'Deschide formularul';small.textContent=open?'Apasă aici pentru a închide formularul':'Apasă aici pentru a deschide formularul'}new MutationObserver(update).observe(b,{attributes:true,attributeFilter:['aria-expanded']});media.addEventListener('change',update);update()})();</script>
 
-<script id="ce-automatic-cloth-behavior">/* Clean Elite: photographic assets, automatic single-run glass reveal. */
+<script id="ce-automatic-cloth-behavior">/* Clean Elite — optical glass reveal, local assets, single automatic pass. */
 (()=>{
  const hero=document.getElementById('acasa');if(!hero)return;
- const reduced=matchMedia('(prefers-reduced-motion: reduce)');if(reduced.matches)return;
- const hand=new Image(),marks=new Image();hand.src='assets/hero-cloth-folded-only-v2.webp';marks.src='assets/hero-glass-marks-real-v2.webp';
- let launched=false,finished=false,raf=0,fallback=0,loadTimeout=0,layoutWidth=0,layoutHeight=0;
- const overlay=document.createElement('div');overlay.className='ce-real-overlay';overlay.setAttribute('aria-hidden','true');
- const canvas=document.createElement('canvas');canvas.className='ce-real-glass';const ctx=canvas.getContext('2d');if(!ctx)return;
- const arm=document.createElement('div');arm.className='ce-real-hand';hand.alt='';arm.append(hand);
- overlay.append(canvas,arm);
- function end(){if(finished)return;finished=true;cancelAnimationFrame(raf);clearTimeout(fallback);clearTimeout(loadTimeout);overlay.classList.add('ce-real-done');hero.classList.remove('ce-real-wiping');setTimeout(()=>overlay.remove(),700);}
- function begin(){if(launched||reduced.matches)return;launched=true;clearTimeout(loadTimeout);if(!hand.naturalWidth||!marks.naturalWidth)return;hero.append(overlay);hero.classList.add('ce-real-wiping');
- const w=hero.clientWidth,h=hero.clientHeight;layoutWidth=w;layoutHeight=h;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);
- ctx.fillStyle='rgba(169,164,151,.13)';ctx.fillRect(0,0,w,h);ctx.globalAlpha=.28;const scale=Math.max(w/marks.naturalWidth,h/marks.naturalHeight),mw=marks.naturalWidth*scale,mh=marks.naturalHeight*scale;ctx.drawImage(marks,(w-mw)/2,(h-mh)/2,mw,mh);ctx.globalAlpha=1;
- // Uneven deposits, fingerprints and water spots sit on the glass, not on the room.
- let seed=721;function random(){seed=(seed*16807)%2147483647;return(seed-1)/2147483646;}
- for(let i=0;i<65;i++){
-  const px=random()*w,py=random()*h,r=12+random()*Math.min(w,h)*.12;
-  const g=ctx.createRadialGradient(px,py,r*.08,px,py,r);
-  g.addColorStop(0,'rgba(142,135,118,.16)');g.addColorStop(.65,'rgba(170,164,148,.07)');g.addColorStop(1,'rgba(170,164,148,0)');
-  ctx.fillStyle=g;ctx.fillRect(px-r,py-r,r*2,r*2);
+ const media=matchMedia('(prefers-reduced-motion: reduce)');if(media.matches)return;
+ const cloth=new Image(),room=new Image();let started=false,ended=false,raf=0,watchdog=0,loading=0;
+ const layer=document.createElement('div');layer.className='ce-optical-glass';layer.setAttribute('aria-hidden','true');
+ const pane=document.createElement('canvas'),wet=document.createElement('canvas');pane.className='ce-optical-pane';wet.className='ce-optical-water';
+ const ctx=pane.getContext('2d'),water=wet.getContext('2d');if(!ctx||!water)return;
+ const fabric=document.createElement('div');fabric.className='ce-optical-cloth';cloth.alt='';fabric.append(cloth);layer.append(pane,wet,fabric);
+ function finish(){if(ended)return;ended=true;cancelAnimationFrame(raf);clearTimeout(watchdog);clearTimeout(loading);layer.classList.add('ce-optical-finished');setTimeout(()=>layer.remove(),560);}
+ function begin(){if(started||ended||media.matches||!cloth.naturalWidth||!room.naturalWidth)return;started=true;clearTimeout(loading);
+ const w=hero.clientWidth,h=hero.clientHeight,dpr=Math.min(devicePixelRatio||1,1.75);if(!w||!h){finish();return;}
+ for(const c of [pane,wet]){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);c.style.width=w+'px';c.style.height=h+'px';}
+ ctx.setTransform(dpr,0,0,dpr,0,0);water.setTransform(dpr,0,0,dpr,0,0);
+ // Same photograph and crop as the scene: the clear path reveals the actual hero.
+ const fit=Math.max(w/room.naturalWidth,h/room.naturalHeight)*1.025,rw=room.naturalWidth*fit,rh=room.naturalHeight*fit;
+ ctx.filter='blur(3px) saturate(.78) contrast(.9)';ctx.drawImage(room,(w-rw)/2,(h-rh)*.53,rw,rh);ctx.filter='none';
+ const shade=ctx.createLinearGradient(0,0,w,0);shade.addColorStop(0,'rgba(5,23,35,.62)');shade.addColorStop(.6,'rgba(5,23,35,.15)');shade.addColorStop(1,'rgba(5,23,35,.04)');ctx.fillStyle=shade;ctx.fillRect(0,0,w,h);
+ ctx.fillStyle='rgba(194,196,186,.19)';ctx.fillRect(0,0,w,h);
+ let seed=71627;const random=()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646;};
+ for(let i=0;i<85;i++){const x=random()*w,y=random()*h,r=12+random()*Math.min(w,h)*.15;const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,'rgba(181,174,151,.15)');g.addColorStop(.5,'rgba(202,198,178,.08)');g.addColorStop(1,'rgba(202,198,178,0)');ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);}
+ // Small highlights/shadows describe water on glass rather than painted white rings.
+ for(let i=0;i<125;i++){const x=random()*w,y=random()*h,r=.8+random()*3.4;ctx.beginPath();ctx.ellipse(x,y,r*.72,r,0,0,Math.PI*2);ctx.fillStyle='rgba(10,25,30,.10)';ctx.fill();ctx.beginPath();ctx.ellipse(x-r*.2,y-r*.3,r*.24,r*.16,-.5,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.47)';ctx.fill();}
+ // Fine diagonal deposits make the dirty/clean contrast legible without obscuring copy.
+ ctx.lineWidth=.7;for(let i=0;i<45;i++){const x=random()*w,y=random()*h;ctx.strokeStyle='rgba(238,235,220,'+(.025+random()*.045)+')';ctx.beginPath();ctx.moveTo(x,y);ctx.bezierCurveTo(x+20,y+16,x+50,y+26,x+90,y+28);ctx.stroke();}
+ const size=Math.max(285,Math.min(460,h*.66)),ch=size*cloth.naturalHeight/cloth.naturalWidth;fabric.style.width=size+'px';
+ // The cloth occupies roughly two-thirds of its transparent asset width.
+ const rows=Math.max(4,Math.ceil(h/(ch*.72))),cycles=rows/2,table=[];let distance=0,prev=null;
+ for(let i=0;i<=3200;i++){const p=i/3200,t=cycles*2*Math.PI*p,edge=.52*(Math.exp(-Math.pow(p/.065,4))+Math.exp(-Math.pow((1-p)/.065,4)));
+ const descent=p+.9*Math.sin(2*t)/(4*cycles*Math.PI),q={x:(.5+(.4+edge)*Math.cos(t))*w,y:(-.07+1.14*descent)*h};if(prev)distance+=Math.hypot(q.x-prev.x,q.y-prev.y);q.d=distance;table.push(q);prev=q;}
+ const duration=Math.min(5800,4300+(rows-4)*280);let start=null,last=null,lastTime=null,index=0,angle=0,angularVelocity=0;
+ hero.append(layer);
+ function frame(now){if(ended)return;if(start===null)start=now;const elapsed=now-start,p=Math.min(1,elapsed/duration),target=p*distance;
+ while(index<table.length-2&&table[index+1].d<target)index++;const a=table[index],b=table[index+1],u=Math.max(0,Math.min(1,(target-a.d)/(b.d-a.d||1))),x=a.x+(b.x-a.x)*u,y=a.y+(b.y-a.y)*u;
+ const dt=lastTime===null?1/60:Math.min(.033,(now-lastTime)/1000),vx=last?(x-last.x)/Math.max(dt,.001):0,desired=Math.max(-7,Math.min(7,-vx*.004));
+ angularVelocity+=(110*(desired-angle)-21*angularVelocity)*dt;angle+=angularVelocity*dt;
+ const compression=1-.012*Math.min(1,Math.abs(vx)/1500),stretch=1+(1-compression)*.5;
+ ctx.globalCompositeOperation='destination-out';const steps=last?Math.max(1,Math.ceil(Math.hypot(x-last.x,y-last.y)/(size*.065))):1;
+ for(let k=1;k<=steps;k++){const t=k/steps,px=last?last.x+(x-last.x)*t:x,py=last?last.y+(y-last.y)*t:y;ctx.save();ctx.translate(px,py);ctx.rotate(angle*Math.PI/180);ctx.scale(stretch,compression);ctx.drawImage(cloth,-size/2,-ch/2,size,ch);ctx.restore();}
+ // Transient wet edge travels with the cloth; it never leaves decorative particles behind.
+ water.clearRect(0,0,w,h);if(last&&p>.04&&p<.96){water.save();water.translate(x,y);water.rotate(angle*Math.PI/180);water.strokeStyle='rgba(228,244,247,.19)';water.lineWidth=.9;water.beginPath();water.ellipse(0,0,size*.29,ch*.43,0,Math.PI*.08,Math.PI*.87);water.stroke();water.restore();}
+ fabric.style.transform='translate3d('+x.toFixed(2)+'px,'+y.toFixed(2)+'px,0) translate(-50%,-50%) rotate('+angle.toFixed(3)+'deg) scale('+stretch.toFixed(4)+','+compression.toFixed(4)+')';
+ last={x,y};lastTime=now;if(p<1)raf=requestAnimationFrame(frame);else finish();}
+ raf=requestAnimationFrame(frame);watchdog=setTimeout(finish,duration+1800);
+ window.addEventListener('resize',()=>{if(Math.abs(hero.clientWidth-w)>3||Math.abs(hero.clientHeight-h)>80)finish();},{passive:true});
  }
- for(let i=0;i<30;i++){const px=random()*w,py=random()*h,r=2+random()*8;ctx.strokeStyle='rgba(231,233,222,.22)';ctx.lineWidth=.8;ctx.beginPath();ctx.ellipse(px,py,r*.7,r,random(),0,Math.PI*2);ctx.stroke();}
-
- const size=Math.max(280,Math.min(450,h*.65));arm.style.width=size+'px';const clothHeight=size*hand.naturalHeight/hand.naturalWidth;let start=null,last=null;
- // Four broad connected sweeps with wide U-turns. The analytic path is smooth through every reversal.
- const total=4200,table=[];let travel=0,previous=null;
- for(let i=0;i<=2400;i++){const p=i/2400,theta=4*Math.PI*p;
- const edge=.52*(Math.exp(-Math.pow(p/.08,4))+Math.exp(-Math.pow((1-p)/.08,4)));
- const amplitude=.38+edge;
- const descent=p+.92*Math.sin(2*theta)/(8*Math.PI);
- const point={x:(.5+amplitude*Math.cos(theta))*w,y:(-.07+1.14*descent)*h};
- if(previous)travel+=Math.hypot(point.x-previous.x,point.y-previous.y);
- table.push({x:point.x,y:point.y,d:travel});previous=point;}
- // Constant arc-length speed through every turn; no easing, holds or restarts.
- let index=0;
- function frame(now){if(finished)return;if(start===null)start=now;const progress=Math.max(0,Math.min(1,(now-start)/total)),distance=progress*travel;while(index<table.length-2&&table[index+1].d<distance)index++;const a=table[index],b=table[index+1],mix=Math.max(0,Math.min(1,(distance-a.d)/(b.d-a.d||1))),x=a.x+(b.x-a.x)*mix,y=a.y+(b.y-a.y)*mix;
- const tilt=-2+5.5*Math.sin(progress*Math.PI*3-.6)+1.1*Math.sin(progress*Math.PI*2),pressure=1-.008*Math.sin(progress*Math.PI*4)**2;
-
- ctx.globalCompositeOperation='destination-out';
- // Stamp the cloth's own alpha silhouette: the visible fabric and clean trail coincide.
- const steps=last?Math.max(1,Math.ceil(Math.hypot(x-last.x,y-last.y)/(size*.09))):1;
- for(let k=1;k<=steps;k++){
-  const t=k/steps,px=last?last.x+(x-last.x)*t:x,py=last?last.y+(y-last.y)*t:y;
-  ctx.save();ctx.translate(px,py);ctx.rotate(tilt*Math.PI/180);ctx.scale(pressure,pressure);
-  ctx.drawImage(hand,-size/2,-clothHeight/2,size,clothHeight);ctx.restore();
- }
- arm.style.transform='translate3d('+x.toFixed(2)+'px,'+y.toFixed(2)+'px,0) translate(-50%,-50%) rotate('+tilt.toFixed(3)+'deg) scale('+pressure.toFixed(4)+')';last={x,y};
- if(progress<1)raf=requestAnimationFrame(frame);else end();}
- raf=requestAnimationFrame(frame);fallback=setTimeout(end,total+1800);}
- // Delay the effect until both small local assets are ready; never hide content on an image failure.
- function ready(){if(hand.complete&&marks.complete&&hand.naturalWidth&&marks.naturalWidth)begin();}
- hand.onload=ready;marks.onload=ready;hand.onerror=marks.onerror=()=>{clearTimeout(loadTimeout);launched=true;end();};loadTimeout=setTimeout(()=>{launched=true;end();},4500);ready();
- window.addEventListener('resize',()=>{if(launched&&(Math.abs(hero.clientWidth-layoutWidth)>2||Math.abs(hero.clientHeight-layoutHeight)>60))end();},{passive:true});
- if(reduced.addEventListener)reduced.addEventListener('change',e=>{if(e.matches){launched=true;end();}});
+ function ready(){if(cloth.complete&&room.complete)begin();}
+ cloth.onload=room.onload=ready;cloth.onerror=room.onerror=finish;cloth.src='assets/hero-cloth-folded-only-v2.webp';room.src='assets/hero-living-c15.webp';loading=setTimeout(finish,5000);ready();
+ document.addEventListener('visibilitychange',()=>{if(document.hidden&&started)finish();});
+ if(media.addEventListener)media.addEventListener('change',e=>{if(e.matches)finish();});
 })();
-
-
 </script>
 </body></html>
