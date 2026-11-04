@@ -775,7 +775,7 @@ html body .ce-brand-bar-contact:active{background:#96d7f4!important;transform:sc
 #acasa .ce-optical-pane{z-index:2}
 #acasa .ce-optical-water{z-index:3}
 #acasa .ce-optical-cloth{position:absolute;left:0;top:0;z-index:6;transform-origin:50% 50%;will-change:transform;filter:drop-shadow(0 1px 1.5px rgba(4,23,32,.18));pointer-events:none}
-#acasa .ce-optical-cloth img{display:block;width:100%;height:auto;max-width:none;border:0;border-radius:0;box-shadow:none}
+#acasa .ce-optical-cloth canvas{display:block;width:100%;height:auto;max-width:none;border:0;border-radius:0;box-shadow:none}
 #acasa .ce-optical-finished .ce-optical-pane,#acasa .ce-optical-finished .ce-optical-water{opacity:0}
 @media(prefers-reduced-motion:reduce){#acasa .ce-optical-glass{display:none!important}}
 </style>
@@ -949,7 +949,9 @@ window.addEventListener('scroll',tick,{passive:true});window.addEventListener('r
  const layer=document.createElement('div');layer.className='ce-optical-glass';layer.setAttribute('aria-hidden','true');
  const pane=document.createElement('canvas'),wet=document.createElement('canvas');pane.className='ce-optical-pane';wet.className='ce-optical-water';
  const ctx=pane.getContext('2d'),water=wet.getContext('2d');if(!ctx||!water)return;
- const fabric=document.createElement('div');fabric.className='ce-optical-cloth';cloth.alt='';fabric.append(cloth);layer.append(pane,wet,fabric);
+ const fabric=document.createElement('div');fabric.className='ce-optical-cloth';
+ const textile=document.createElement('canvas'),thread=textile.getContext('2d');if(!thread)return;
+ fabric.append(textile);layer.append(pane,wet,fabric);
  function finish(){if(ended)return;ended=true;cancelAnimationFrame(raf);clearTimeout(watchdog);clearTimeout(loading);layer.classList.add('ce-optical-finished');setTimeout(()=>layer.remove(),560);}
  function begin(){if(started||ended||media.matches||!cloth.naturalWidth||!room.naturalWidth)return;started=true;clearTimeout(loading);
  const w=hero.clientWidth,h=hero.clientHeight,dpr=Math.min(devicePixelRatio||1,1.75);if(!w||!h){finish();return;}
@@ -966,7 +968,32 @@ window.addEventListener('scroll',tick,{passive:true});window.addEventListener('r
  for(let i=0;i<125;i++){const x=random()*w,y=random()*h,r=.8+random()*3.4;ctx.beginPath();ctx.ellipse(x,y,r*.72,r,0,0,Math.PI*2);ctx.fillStyle='rgba(10,25,30,.10)';ctx.fill();ctx.beginPath();ctx.ellipse(x-r*.2,y-r*.3,r*.24,r*.16,-.5,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.47)';ctx.fill();}
  // Fine diagonal deposits make the dirty/clean contrast legible without obscuring copy.
  ctx.lineWidth=.7;for(let i=0;i<45;i++){const x=random()*w,y=random()*h;ctx.strokeStyle='rgba(238,235,220,'+(.025+random()*.045)+')';ctx.beginPath();ctx.moveTo(x,y);ctx.bezierCurveTo(x+20,y+16,x+50,y+26,x+90,y+28);ctx.stroke();}
+
+ // Sparse, irregular fingerprint ridges add glass-scale detail in the deposits.
+ for(let cluster=0;cluster<3;cluster++){
+  const fx=w*(.23+random()*.62),fy=h*(.12+random()*.7);
+  ctx.save();ctx.translate(fx,fy);ctx.rotate(-.45+random()*.9);ctx.lineWidth=.55;
+  for(let ridge=0;ridge<11;ridge++){ctx.strokeStyle='rgba(239,236,221,'+(.025+random()*.035)+')';ctx.beginPath();ctx.ellipse(0,0,5+ridge*1.7,9+ridge*2.1,0,Math.PI*.13,Math.PI*1.83);ctx.stroke();}
+  ctx.restore();
+ }
+ for(let grain=0;grain<600;grain++){ctx.fillStyle=grain%3?'rgba(255,255,245,.025)':'rgba(28,41,41,.028)';ctx.fillRect(random()*w,random()*h,.55,.55);}
  const size=.5625*Math.max(285,Math.min(460,h*.66)),ch=size*cloth.naturalHeight/cloth.naturalWidth;fabric.style.width=size+'px';
+ textile.width=512;textile.height=Math.round(512*cloth.naturalHeight/cloth.naturalWidth);
+ let bend=0,bendVelocity=0;const moisture=[];
+ function weave(force,clock,step=1/60){
+  const tw=textile.width,th=textile.height;thread.clearRect(0,0,tw,th);
+  // The same photographed fabric bends in shallow strips under friction.
+  const target=Math.max(-7,Math.min(7,force*.0035));
+  bendVelocity+=(95*(target-bend)-20*bendVelocity)*step;bend+=bendVelocity*step;
+  const bands=18;
+  for(let row=0;row<bands;row++){
+   const v=(row+.5)/bands,sy=row*cloth.naturalHeight/bands,sh=Math.min(cloth.naturalHeight-sy,cloth.naturalHeight/bands+1);
+   const shear=bend*(Math.pow(v-.5,2)*2-.14),ripple=Math.sin(v*4.8+clock*.0018)*Math.abs(bend)*.12;
+   thread.drawImage(cloth,0,sy,cloth.naturalWidth,sh,shear+ripple,row*th/bands,tw,sh*th/cloth.naturalHeight+.5);
+  }
+ }
+ weave(0,0);
+
  // The cloth occupies roughly two-thirds of its transparent asset width.
  const rows=Math.max(4,Math.ceil(h/(ch*.72))),cycles=rows/2,table=[];let distance=0,prev=null;
  for(let i=0;i<=3200;i++){const p=i/3200,t=cycles*2*Math.PI*p,edge=.52*(Math.exp(-Math.pow(p/.065,4))+Math.exp(-Math.pow((1-p)/.065,4)));
@@ -978,10 +1005,22 @@ window.addEventListener('scroll',tick,{passive:true});window.addEventListener('r
  const dt=lastTime===null?1/60:Math.min(.033,(now-lastTime)/1000),vx=last?(x-last.x)/Math.max(dt,.001):0,desired=Math.max(-7,Math.min(7,-vx*.004));
  angularVelocity+=(110*(desired-angle)-21*angularVelocity)*dt;angle+=angularVelocity*dt;
  const compression=1-.012*Math.min(1,Math.abs(vx)/1500),stretch=1+(1-compression)*.5;
+ weave(vx,elapsed,dt);
  ctx.globalCompositeOperation='destination-out';const steps=last?Math.max(1,Math.ceil(Math.hypot(x-last.x,y-last.y)/(size*.065))):1;
- for(let k=1;k<=steps;k++){const t=k/steps,px=last?last.x+(x-last.x)*t:x,py=last?last.y+(y-last.y)*t:y;ctx.save();ctx.translate(px,py);ctx.rotate(angle*Math.PI/180);ctx.scale(stretch,compression);ctx.drawImage(cloth,-size/2,-ch/2,size,ch);ctx.restore();}
- // Transient wet edge travels with the cloth; it never leaves decorative particles behind.
- water.clearRect(0,0,w,h);if(last&&p>.04&&p<.96){water.save();water.translate(x,y);water.rotate(angle*Math.PI/180);water.strokeStyle='rgba(228,244,247,.19)';water.lineWidth=.9;water.beginPath();water.ellipse(0,0,size*.29,ch*.43,0,Math.PI*.08,Math.PI*.87);water.stroke();water.restore();}
+ for(let k=1;k<=steps;k++){const t=k/steps,px=last?last.x+(x-last.x)*t:x,py=last?last.y+(y-last.y)*t:y;ctx.save();ctx.translate(px,py);ctx.rotate(angle*Math.PI/180);ctx.scale(stretch,compression);ctx.drawImage(textile,-size/2,-ch/2,size,ch);ctx.restore();}
+
+ // A short-lived damp film follows the contact point and dries without sparkles.
+ moisture.push({x,y,t:now});while(moisture.length&&now-moisture[0].t>210)moisture.shift();
+ water.clearRect(0,0,w,h);
+ if(moisture.length>1&&p>.03&&p<.98){
+  water.lineCap='round';water.lineJoin='round';
+  for(let n=1;n<moisture.length;n++){
+   const a=moisture[n-1],b=moisture[n],life=Math.max(0,1-(now-b.t)/210);
+   water.strokeStyle='rgba(204,227,232,'+(.035*life)+')';water.lineWidth=ch*.42;
+   water.beginPath();water.moveTo(a.x,a.y);water.lineTo(b.x,b.y);water.stroke();
+  }
+ }
+
  fabric.style.transform='translate3d('+x.toFixed(2)+'px,'+y.toFixed(2)+'px,0) translate(-50%,-50%) rotate('+angle.toFixed(3)+'deg) scale('+stretch.toFixed(4)+','+compression.toFixed(4)+')';
  last={x,y};lastTime=now;if(p<1)raf=requestAnimationFrame(frame);else finish();}
  raf=requestAnimationFrame(frame);watchdog=setTimeout(finish,duration+1800);
